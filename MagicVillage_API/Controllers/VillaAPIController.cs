@@ -9,11 +9,18 @@ namespace MagicVillage_API.Controllers
     [ApiController]
     public class VillaAPIController : ControllerBase
     {
+        private readonly ILogger<VillaAPIController> _logger;
+
+        public VillaAPIController(ILogger<VillaAPIController> logger)
+        {
+           _logger = logger;
+        }
 
         [HttpGet(Name = "GetAllVilla")]
         [ProducesResponseType(200)]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
+            _logger.LogInformation("Getting all Vilas");
             return Ok(VillaStore.villaList);
 
         }

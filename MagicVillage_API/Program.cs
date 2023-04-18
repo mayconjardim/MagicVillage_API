@@ -1,5 +1,11 @@
+using Microsoft.AspNetCore.Hosting;
+using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
+Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
+    .WriteTo.File("log/villaLogs.txt", rollingInterval: RollingInterval.Day).CreateLogger();
+
+builder.Host.UseSerilog();
 // Add services to the container.
 
 builder.Services.AddControllers().AddNewtonsoftJson();
