@@ -23,10 +23,10 @@ namespace MagicVillage_API.Controllers
 
         [HttpGet(Name = "GetAllVilla")]
         [ProducesResponseType(200)]
-        public ActionResult<IEnumerable<VillaDTO>> GetVillas()
+        public async Task<ActionResult<IEnumerable<VillaDTO>>> GetVillas()
         {
             _logger.LogInformation("Getting all Vilas");
-            return Ok(_context.Villas.ToList());
+            return Ok(await _context.Villas.ToListAsync());
 
         }
 
@@ -34,9 +34,9 @@ namespace MagicVillage_API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public ActionResult<VillaDTO> GetVilla(int id)
+        public async Task<ActionResult<VillaDTO>> GetVilla(int id)
         {
-            var villa = _context.Villas.FirstOrDefault(v => v.Id == id);
+            var villa = await _context.Villas.FirstOrDefaultAsync(v => v.Id == id);
 
             if (villa == null)
             {
@@ -50,14 +50,14 @@ namespace MagicVillage_API.Controllers
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public ActionResult<VillaDTO> CreateVilla(VillaCreateDTO villaDTO)
+        public async Task<ActionResult<VillaDTO>> CreateVilla(VillaCreateDTO villaDTO)
         {
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (_context.Villas.FirstOrDefault(u => u.Name.ToLower() == villaDTO.Name.ToLower()) != null) 
+            if (await _context.Villas.FirstOrDefaultAsync(u => u.Name.ToLower() == villaDTO.Name.ToLower()) != null) 
             {
                 ModelState.AddModelError("Error", "Villa already Exists!");
                 return BadRequest(ModelState);
@@ -79,8 +79,8 @@ namespace MagicVillage_API.Controllers
                 Sqft = villaDTO.Sqft
             };
 
-            _context.Villas.Add(model);
-            _context.SaveChanges();
+            await _context.Villas.AddAsync(model);
+            await _context.SaveChangesAsync();
 
             return CreatedAtRoute("GetVilla", new { id = model.Id },  model);
         }
@@ -89,7 +89,7 @@ namespace MagicVillage_API.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         [ProducesResponseType(400)]
-        public IActionResult DeleteVilla(int id)
+        public async Task<IActionResult> DeleteVilla(int id)
         {
             
             if (id == 0)
@@ -97,7 +97,7 @@ namespace MagicVillage_API.Controllers
                 return BadRequest();
             }
 
-            var villa = _context.Villas.FirstOrDefault(v => v.Id == id);
+            var villa = await _context.Villas.FirstOrDefaultAsync(v => v.Id == id);
 
             if (villa == null)
             {
@@ -105,7 +105,7 @@ namespace MagicVillage_API.Controllers
             }
 
             _context.Villas.Remove(villa);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return NoContent();
 
@@ -114,7 +114,7 @@ namespace MagicVillage_API.Controllers
         [HttpPut("id", Name = "UpdateVilla")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public IActionResult UpdateVilla(int id, VillaUpdateDTO villaDTO)
+        public async Task<IActionResult> UpdateVilla(int id, VillaUpdateDTO villaDTO)
         {
 
             if (villaDTO == null || id != villaDTO.Id) 
@@ -135,7 +135,7 @@ namespace MagicVillage_API.Controllers
             };
 
             _context.Villas.Update(model);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return NoContent();
 
@@ -144,14 +144,14 @@ namespace MagicVillage_API.Controllers
         [HttpPatch("id", Name = "UpdatePartialVilla")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public IActionResult UpdatePartialVilla(int id, JsonPatchDocument<VillaUpdateDTO> patchDTO)
+        public async Task<IActionResult> UpdatePartialVilla(int id, JsonPatchDocument<VillaUpdateDTO> patchDTO)
         {
             if (patchDTO == null || id == 0)
             {
                 return BadRequest();
             }
 
-            var villa = _context.Villas.AsNoTracking().FirstOrDefault(v => v.Id == id);
+            var villa = await _context.Villas.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
 
             if (villa == null)
             {
@@ -190,7 +190,7 @@ namespace MagicVillage_API.Controllers
             }
 
             _context.Villas.Update(model);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
