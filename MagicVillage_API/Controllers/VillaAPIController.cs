@@ -6,6 +6,7 @@ using MagicVillage_API.Repository.IRepository;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace MagicVillage_API.Controllers
 {
@@ -13,6 +14,7 @@ namespace MagicVillage_API.Controllers
     [ApiController]
     public class VillaAPIController : ControllerBase
     {
+        protected APIResponse _response;
         private readonly ILogger<VillaAPIController> _logger;
         private readonly IVillaRepository _repository;
         private readonly IMapper _mapper;
@@ -22,17 +24,20 @@ namespace MagicVillage_API.Controllers
            _logger = logger;
             _repository = repository;
            _mapper = mapper;
+            this._response = new();
         }
 
         [HttpGet(Name = "GetAllVilla")]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<IEnumerable<VillaDTO>>> GetVillas()
+        public async Task<ActionResult<APIResponse>> GetVillas()
         {
 
             IEnumerable<Villa> villaList = await _repository.GetAllAsync();
             _logger.LogInformation("Getting all Vilas");
-
-            return Ok(_mapper.Map<List<VillaDTO>>(villaList));
+          
+            _response.Result = _mapper.Map<List<VillaDTO>>(villaList);
+            _response.StatusCode = HttpStatusCode.OK;
+            return Ok(_response);
 
         }
 
@@ -40,7 +45,7 @@ namespace MagicVillage_API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<VillaDTO>> GetVilla(int id)
+        public async Task<ActionResult<APIResponse>> GetVilla(int id)
         {
             var villa = await _repository.GetAsync(v => v.Id == id);
 
@@ -50,14 +55,16 @@ namespace MagicVillage_API.Controllers
             }
 
             _logger.LogInformation("Getting One Villa");
-            return Ok(_mapper.Map<VillaDTO>(villa));
+            _response.Result = _mapper.Map<VillaDTO>(villa);
+            _response.StatusCode = HttpStatusCode.OK;
+            return Ok(_response);
         }
 
         [HttpPost(Name = "CreateVilla")]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<VillaDTO>> CreateVilla(VillaCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateVilla(VillaCreateDTO createDTO)
         {
             if(!ModelState.IsValid)
             {
@@ -75,19 +82,21 @@ namespace MagicVillage_API.Controllers
                 return BadRequest(createDTO);
             }
 
-            Villa model = _mapper.Map<Villa>(createDTO);
+            Villa villa = _mapper.Map<Villa>(createDTO);
 
-            await _repository.CreateAsync(model);
+            await _repository.CreateAsync(villa);
             await _repository.SaveAsync();
 
-            return CreatedAtRoute("GetVilla", new { id = model.Id },  model);
+            _response.Result = _mapper.Map<VillaDTO>(villa);
+            _response.StatusCode = HttpStatusCode.Created;
+            return CreatedAtRoute("GetVilla", new { id = villa.Id }, _response);
         }
 
         [HttpDelete("id", Name = "DeleteVilla")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> DeleteVilla(int id)
+        public async Task<ActionResult<APIResponse>> DeleteVilla(int id)
         {
             
             if (id == 0)
@@ -103,15 +112,17 @@ namespace MagicVillage_API.Controllers
             }
 
             await _repository.RemoveAsync(villa);
-  
-            return NoContent();
+
+            _response.StatusCode = HttpStatusCode.NoContent;
+            _response.IsSucess = true;
+            return Ok(_response);
 
         }
 
         [HttpPut("id", Name = "UpdateVilla")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> UpdateVilla(int id, VillaUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateVilla(int id, VillaUpdateDTO updateDTO)
         {
 
             if (updateDTO == null || id != updateDTO.Id) 
@@ -123,7 +134,9 @@ namespace MagicVillage_API.Controllers
 
             await _repository.UpdateAsync(model);
 
-            return NoContent();
+            _response.StatusCode = HttpStatusCode.NoContent;
+            _response.IsSucess = true;
+            return Ok(_response);
 
         }
 

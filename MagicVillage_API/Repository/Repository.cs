@@ -1,5 +1,5 @@
 ﻿using MagicVillage_API.Data;
-using MagicVillage_API.Model;
+
 using MagicVillage_API.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -54,7 +54,7 @@ namespace MagicVillage_API.Repository
 
         public async Task RemoveAsync(T entity)
         {
-            dbSet.AddAsync(entity);
+            dbSet.Remove(entity);
             await SaveAsync();
         }
 

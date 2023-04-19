@@ -1,5 +1,4 @@
-﻿using MagicVillage_API.Model;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace MagicVillage_API.Repository.IRepository
 {
