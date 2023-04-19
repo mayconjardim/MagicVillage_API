@@ -2,6 +2,7 @@
 using MagicVillage_API.Data;
 using MagicVillage_API.Model;
 using MagicVillage_API.Model.Dto;
+using MagicVillage_API.Repository.IRepository;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +14,13 @@ namespace MagicVillage_API.Controllers
     public class VillaAPIController : ControllerBase
     {
         private readonly ILogger<VillaAPIController> _logger;
-        private readonly DataContext _context;
+        private readonly IVillaRepository _repository;
         private readonly IMapper _mapper;
 
-        public VillaAPIController(ILogger<VillaAPIController> logger, DataContext context, IMapper mapper)
+        public VillaAPIController(ILogger<VillaAPIController> logger, IVillaRepository repository, IMapper mapper)
         {
            _logger = logger;
-           _context = context;
+            _repository = repository;
            _mapper = mapper;
         }
 
@@ -28,8 +29,9 @@ namespace MagicVillage_API.Controllers
         public async Task<ActionResult<IEnumerable<VillaDTO>>> GetVillas()
         {
 
-            IEnumerable<Villa> villaList = await _context.Villas.ToListAsync();
+            IEnumerable<Villa> villaList = await _repository.GetAllAsync();
             _logger.LogInformation("Getting all Vilas");
+
             return Ok(_mapper.Map<List<VillaDTO>>(villaList));
 
         }
@@ -40,13 +42,14 @@ namespace MagicVillage_API.Controllers
         [ProducesResponseType(404)]
         public async Task<ActionResult<VillaDTO>> GetVilla(int id)
         {
-            var villa = await _context.Villas.FirstOrDefaultAsync(v => v.Id == id);
+            var villa = await _repository.GetAsync(v => v.Id == id);
 
             if (villa == null)
             {
                 return NotFound();
             }
 
+            _logger.LogInformation("Getting One Villa");
             return Ok(_mapper.Map<VillaDTO>(villa));
         }
 
@@ -61,7 +64,7 @@ namespace MagicVillage_API.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (await _context.Villas.FirstOrDefaultAsync(u => u.Name.ToLower() == createDTO.Name.ToLower()) != null) 
+            if (await _repository.GetAsync(u => u.Name.ToLower() == createDTO.Name.ToLower()) != null) 
             {
                 ModelState.AddModelError("Error", "Villa already Exists!");
                 return BadRequest(ModelState);
@@ -74,8 +77,8 @@ namespace MagicVillage_API.Controllers
 
             Villa model = _mapper.Map<Villa>(createDTO);
 
-            await _context.Villas.AddAsync(model);
-            await _context.SaveChangesAsync();
+            await _repository.CreateAsync(model);
+            await _repository.SaveAsync();
 
             return CreatedAtRoute("GetVilla", new { id = model.Id },  model);
         }
@@ -92,16 +95,15 @@ namespace MagicVillage_API.Controllers
                 return BadRequest();
             }
 
-            var villa = await _context.Villas.FirstOrDefaultAsync(v => v.Id == id);
+            var villa = await _repository.GetAsync(v => v.Id == id);
 
             if (villa == null)
             {
                 return NotFound();
             }
 
-            _context.Villas.Remove(villa);
-            await _context.SaveChangesAsync();
-
+            await _repository.RemoveAsync(villa);
+  
             return NoContent();
 
         }
@@ -119,8 +121,7 @@ namespace MagicVillage_API.Controllers
 
             Villa model = _mapper.Map<Villa>(updateDTO);
 
-            _context.Villas.Update(model);
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(model);
 
             return NoContent();
 
@@ -136,7 +137,7 @@ namespace MagicVillage_API.Controllers
                 return BadRequest();
             }
 
-            var villa = await _context.Villas.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id);
+            var villa = await _repository.GetAsync(v => v.Id == id, tracked: false);
 
             if (villa == null)
             {
@@ -155,8 +156,7 @@ namespace MagicVillage_API.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Villas.Update(model);
-            await _context.SaveChangesAsync();
+             await _repository.UpdateAsync(model);
 
             return NoContent();
         }

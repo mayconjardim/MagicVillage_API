@@ -2,7 +2,6 @@
 using MagicVillage_API.Model;
 using MagicVillage_API.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace MagicVillage_API.Repository
@@ -16,14 +15,14 @@ namespace MagicVillage_API.Repository
             _context = context;
         }
 
-        public async Task<Villa> Create(Villa villa)
+        public async Task<Villa> CreateAsync(Villa villa)
         {
            _context.Villas.Add(villa);
-           await Save();
+           await SaveAsync();
            return villa;
         }
 
-        public async Task<Villa> Get(Expression<Func<Villa,bool>> filter = null, bool tracked = true)
+        public async Task<Villa> GetAsync(Expression<Func<Villa,bool>> filter = null, bool tracked = true)
         {
 
             IQueryable<Villa> query = _context.Villas;
@@ -38,7 +37,7 @@ namespace MagicVillage_API.Repository
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<List<Villa>> GetAll(Expression<Func<Villa,bool>> filter = null)
+        public async Task<List<Villa>> GetAllAsync(Expression<Func<Villa,bool>> filter = null)
         {
             IQueryable<Villa> query = _context.Villas;
 
@@ -50,15 +49,21 @@ namespace MagicVillage_API.Repository
             return await query.ToListAsync();
         }
 
-        public async Task Remove(Villa villa)
+        public async Task RemoveAsync(Villa villa)
         {
             _context.Villas.Add(villa);
-            await Save();
+            await SaveAsync();
         }
 
-        public async Task Save()
+        public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAsync(Villa villa)
+        {
+            _context.Villas.Update(villa);
+            await SaveAsync();
         }
     }
 }
